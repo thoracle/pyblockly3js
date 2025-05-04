@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blockly3JS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Load Blockly core first -->
+    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/blockly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/blocks_compressed.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/javascript_compressed.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/msg/en.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.150.0/build/three.module.js"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="blockly-container">
+            <button id="runButton" class="run-button">Run Program</button>
+            <div id="blocklyDiv"></div>
+        </div>
+        <div id="threejsDiv"></div>
+    </div>
+    
+    <!-- Load our custom blocks after Blockly core -->
+    <script src="{{ url_for('static', filename='js/blockly.js') }}"></script>
+    <!-- Then load Three.js -->
+    <script type="module" src="{{ url_for('static', filename='js/three.js') }}"></script>
+    <!-- Finally load the app that uses both -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
