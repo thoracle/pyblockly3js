@@ -53,4 +53,33 @@ blockly3js/
 
 - Use `black` for code formatting
 - Use `flake8` for linting
-- Run tests before committing changes 
+- Run tests before committing changes
+
+## Toolbox Groups and Blocks
+
+### Movement
+- `move_forward` - Move the object forward
+- `move_backward` - Move the object backward
+- `turn_left` - Turn the object left
+- `turn_right` - Turn the object right
+- `move_distance` - Move the object a specific distance
+- `turn_degrees` - Turn the object a specific number of degrees
+
+### Scene
+- `set_camera_position` - Set camera position (x, y, z)
+- `set_camera_look_at` - Set camera look-at position (x, y, z)
+- `set_light_color` - Set directional light color
+- `set_light_intensity` - Set directional light intensity (0-1)
+- `set_ground_color` - Set ground plane color
+- `set_ground_size` - Set ground plane size
+
+### Logic
+- `controls_if` - If/else statements
+- `controls_repeat_ext` - Loops
+- `logic_compare` - Comparison operations
+- `logic_operation` - Boolean operations
+- `logic_negate` - NOT operations
+- `logic_boolean` - True/false values
+- `math_number` - Number inputs
+- `math_arithmetic` - Basic arithmetic operations
+- `math_random_int` - Generate random integers 
