@@ -1,36 +1,225 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Blockly3JS</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Load Blockly core first -->
-    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/blockly.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/blocks_compressed.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/javascript_compressed.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/blockly@9.3.1/msg/en.js"></script>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.150.0/build/three.module.js"
-            }
+    <title>3D Visual Programming</title>
+    <!-- Load Blockly -->
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/msg/en.js"></script>
+    
+    <!-- Load Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Load our custom scripts -->
+    <script src="{{ url_for('static', filename='js/blockly.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/three.js') }}"></script>
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #f0f0f0;
         }
-    </script>
+        
+        #blocklyDiv {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.9);
+            pointer-events: auto;
+        }
+        
+        #threejsDiv {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-color: #f0f0f0;
+            pointer-events: auto;
+        }
+        
+        #threejsDiv canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        #runButton {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        #runButton:hover {
+            background-color: #45a049;
+        }
+        
+        /* Make Blockly blocks semi-transparent */
+        .blocklyPath {
+            opacity: 0.8;
+        }
+        
+        .blocklyPathLight, .blocklyPathDark {
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="blockly-container">
-            <button id="runButton" class="run-button">Run Program</button>
-            <div id="blocklyDiv"></div>
-        </div>
-        <div id="threejsDiv"></div>
-    </div>
+    <div id="threejsDiv"></div>
+    <div id="blocklyDiv"></div>
+    <button id="runButton">Update</button>
     
-    <!-- Load our custom blocks after Blockly core -->
-    <script src="{{ url_for('static', filename='js/blockly.js') }}"></script>
-    <!-- Then load Three.js -->
-    <script type="module" src="{{ url_for('static', filename='js/three.js') }}"></script>
-    <!-- Finally load the app that uses both -->
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Define toolbox
+        const toolbox = {
+            kind: 'categoryToolbox',
+            contents: [
+                {
+                    kind: 'category',
+                    name: 'Movement',
+                    colour: '#5C6BC0',
+                    contents: [
+                        { kind: 'block', type: 'move_forward' },
+                        { kind: 'block', type: 'move_backward' },
+                        { kind: 'block', type: 'turn_left' },
+                        { kind: 'block', type: 'turn_right' },
+                        { kind: 'block', type: 'move_distance' },
+                        { kind: 'block', type: 'turn_degrees' }
+                    ]
+                },
+                {
+                    kind: 'category',
+                    name: 'Scene',
+                    colour: '#66BB6A',
+                    contents: [
+                        { kind: 'block', type: 'scene_color_picker' },
+                        { kind: 'block', type: 'set_camera_position' },
+                        { kind: 'block', type: 'set_camera_look_at' },
+                        { kind: 'block', type: 'set_light_color' },
+                        { kind: 'block', type: 'set_light_intensity' },
+                        { kind: 'block', type: 'set_ground_color' },
+                        { kind: 'block', type: 'set_ground_size' }
+                    ]
+                },
+                {
+                    kind: 'category',
+                    name: 'Logic',
+                    colour: '#FFA726',
+                    contents: [
+                        { kind: 'block', type: 'controls_if' },
+                        { kind: 'block', type: 'controls_repeat_ext' },
+                        { kind: 'block', type: 'logic_compare' },
+                        { kind: 'block', type: 'logic_operation' },
+                        { kind: 'block', type: 'logic_negate' },
+                        { kind: 'block', type: 'logic_boolean' },
+                        { kind: 'block', type: 'math_number' },
+                        { kind: 'block', type: 'math_arithmetic' },
+                        { kind: 'block', type: 'math_random_int' }
+                    ]
+                }
+            ]
+        };
+
+        // Initialize the application when the page loads
+        window.addEventListener('load', () => {
+            console.log('Page loaded, starting initialization...');
+            
+            try {
+                // Initialize Three.js first
+                const threeApp = new ThreeJSApp();
+                threeApp.init();
+                console.log('Three.js initialized');
+
+                // Then initialize Blockly
+                const workspace = Blockly.inject('blocklyDiv', {
+                    toolbox: toolbox,
+                    scrollbars: true,
+                    grid: {
+                        spacing: 20,
+                        length: 3,
+                        colour: '#ccc',
+                        snap: true
+                    },
+                    zoom: {
+                        controls: true,
+                        wheel: true,
+                        startScale: 1.0,
+                        maxScale: 3,
+                        minScale: 0.3,
+                        scaleSpeed: 1.2
+                    }
+                });
+                console.log('Blockly initialized');
+
+                // Add Run button click handler
+                document.getElementById('runButton').addEventListener('click', () => {
+                    try {
+                        const code = Blockly.JavaScript.workspaceToCode(workspace);
+                        console.log('Generated code:', code);
+                        if (code.trim()) {
+                            // Define the movement functions
+                            const movementFunctions = {
+                                moveForward: () => {
+                                    // Implement movement logic
+                                    console.log('Moving forward');
+                                },
+                                moveBackward: () => {
+                                    // Implement movement logic
+                                    console.log('Moving backward');
+                                },
+                                turnLeft: () => {
+                                    // Implement movement logic
+                                    console.log('Turning left');
+                                },
+                                turnRight: () => {
+                                    // Implement movement logic
+                                    console.log('Turning right');
+                                },
+                                moveDistance: (distance) => {
+                                    // Implement movement logic
+                                    console.log('Moving distance:', distance);
+                                },
+                                turnDegrees: (degrees) => {
+                                    // Implement movement logic
+                                    console.log('Turning degrees:', degrees);
+                                }
+                            };
+
+                            // Execute the generated code with the movement functions
+                            const executeCode = new Function(...Object.keys(movementFunctions), code);
+                            executeCode(...Object.values(movementFunctions));
+                        }
+                    } catch (error) {
+                        console.error('Error executing blocks:', error);
+                        alert('Error executing blocks: ' + error.message);
+                    }
+                });
+            } catch (error) {
+                console.error('Error during initialization:', error);
+                alert('Error during initialization: ' + error.message);
+            }
+        });
+    </script>
 </body>
 </html>
