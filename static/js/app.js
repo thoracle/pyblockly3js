@@ -1,140 +1,197 @@
 // Main application logic
 let workspace;
 let isInitialized = false;
+let threeApp;
 
-function initApp() {
-    // Wait for Three.js to be ready
-    if (!window.object) {
-        console.log('Waiting for Three.js initialization...');
-        setTimeout(initApp, 100);
-        return;
+export async function initApp() {
+    try {
+        // Import Three.js app
+        const ThreeJSModule = await import('./three.js');
+        const ThreeJSApp = ThreeJSModule.default;
+        threeApp = new ThreeJSApp();
+        await threeApp.init();
+
+        // Prevent multiple initializations
+        if (isInitialized) {
+            return;
+        }
+
+        console.log('Initializing Blockly workspace...');
+        
+        // Initialize Blockly workspace
+        initBlockly();
+
+        // Add Run button click handler
+        document.getElementById('runButton').addEventListener('click', () => {
+            try {
+                // Validate workspace
+                if (!workspace) {
+                    throw new Error('Blockly workspace not initialized');
+                }
+
+                // Get all blocks
+                const blocks = workspace.getAllBlocks();
+                if (blocks.length === 0) {
+                    console.warn('No blocks in workspace');
+                    return;
+                }
+
+                // Check for disconnected blocks
+                const disconnectedBlocks = blocks.filter(block => !block.getParent());
+                if (disconnectedBlocks.length > 0) {
+                    console.warn('Found disconnected blocks:', disconnectedBlocks.map(b => b.type));
+                }
+
+                // Generate code
+                const code = Blockly.JavaScript.workspaceToCode(workspace);
+                console.log('Generated code:', code);
+
+                if (code.trim()) {
+                    executeCode(code);
+                } else {
+                    console.warn('No code generated from blocks');
+                }
+            } catch (error) {
+                console.error('Error executing blocks:', error);
+                alert('Error executing blocks: ' + error.message);
+            }
+        });
+
+        isInitialized = true;
+    } catch (error) {
+        console.error('Error initializing app:', error);
+        alert('Error initializing app: ' + error.message);
     }
+}
 
-    // Prevent multiple initializations
-    if (isInitialized) {
-        return;
-    }
-
+// Initialize Blockly workspace
+function initBlockly() {
     console.log('Initializing Blockly workspace...');
     
-    // Initialize Blockly workspace
+    // Define toolbox categories
+    const toolbox = {
+        kind: 'categoryToolbox',
+        contents: [
+            {
+                kind: 'category',
+                name: 'Movement',
+                colour: '#5C6BC0',
+                contents: [
+                    {
+                        kind: 'block',
+                        type: 'move_forward'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'move_backward'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'turn_left'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'turn_right'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'move_distance'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'turn_degrees'
+                    }
+                ]
+            },
+            {
+                kind: 'category',
+                name: 'Scene',
+                colour: '#66BB6A',
+                contents: [
+                    {
+                        kind: 'block',
+                        type: 'scene_color_picker'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'set_camera_position'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'set_camera_look_at'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'set_light_color'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'set_light_intensity'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'set_ground_color'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'set_ground_size'
+                    }
+                ]
+            },
+            {
+                kind: 'category',
+                name: 'Logic',
+                colour: '#FFA726',
+                contents: [
+                    {
+                        kind: 'block',
+                        type: 'controls_if'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'controls_repeat_ext'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'logic_compare'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'logic_operation'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'logic_negate'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'logic_boolean'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_number'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_arithmetic'
+                    },
+                    {
+                        kind: 'block',
+                        type: 'math_random_int'
+                    }
+                ]
+            }
+        ]
+    };
+
+    // Create workspace
     workspace = Blockly.inject('blocklyDiv', {
-        toolbox: {
-            kind: 'categoryToolbox',
-            contents: [
-                {
-                    kind: 'category',
-                    name: 'Movement',
-                    colour: '#5CA65C',
-                    contents: [
-                        {
-                            kind: 'block',
-                            type: 'move_forward'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'move_backward'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'turn_left'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'turn_right'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'move_distance'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'turn_degrees'
-                        }
-                    ]
-                },
-                {
-                    kind: 'category',
-                    name: 'Scene',
-                    colour: '#5C6CA6',
-                    contents: [
-                        {
-                            kind: 'block',
-                            type: 'color_picker'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'set_camera_position'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'set_camera_look_at'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'set_light_color'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'set_light_intensity'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'set_ground_color'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'set_ground_size'
-                        }
-                    ]
-                },
-                {
-                    kind: 'category',
-                    name: 'Logic',
-                    colour: '#5C68A6',
-                    contents: [
-                        {
-                            kind: 'block',
-                            type: 'controls_if'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'controls_repeat_ext'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'logic_compare'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'logic_operation'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'logic_negate'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'logic_boolean'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'math_number'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'math_arithmetic'
-                        },
-                        {
-                            kind: 'block',
-                            type: 'math_random_int'
-                        }
-                    ]
-                }
-            ]
-        },
+        toolbox: toolbox,
         scrollbars: true,
-        trashcan: true,
+        move: {
+            drag: true,
+            wheel: true
+        },
         zoom: {
             controls: true,
             wheel: true,
@@ -148,65 +205,31 @@ function initApp() {
             length: 3,
             colour: '#ccc',
             snap: true
-        },
-        move: {
-            scrollbars: true,
-            drag: true,
-            wheel: true
         }
     });
 
-    // Verify block registration
-    const registeredBlocks = Object.keys(Blockly.Blocks);
-    const registeredGenerators = Object.keys(Blockly.JavaScript);
-    console.log('Available blocks:', registeredBlocks);
-    console.log('Available generators:', registeredGenerators);
+    // Log available blocks and generators
+    console.log('Available blocks:', Object.keys(Blockly.Blocks));
+    console.log('Available generators:', Object.keys(Blockly.JavaScript));
 
-    // Add Run button click handler
-    document.getElementById('runButton').addEventListener('click', () => {
-        try {
-            // Validate workspace
-            if (!workspace) {
-                throw new Error('Blockly workspace not initialized');
-            }
-
-            // Get all blocks
-            const blocks = workspace.getAllBlocks();
-            if (blocks.length === 0) {
-                console.warn('No blocks in workspace');
-                return;
-            }
-
-            // Check for disconnected blocks
-            const disconnectedBlocks = blocks.filter(block => !block.getParent());
-            if (disconnectedBlocks.length > 0) {
-                console.warn('Found disconnected blocks:', disconnectedBlocks.map(b => b.type));
-            }
-
-            // Debug generator availability before code generation
-            console.log('Before code generation:');
-            console.log('move_forward generator type:', typeof Blockly.JavaScript['move_forward']);
-            console.log('move_forward generator in forBlock:', typeof Blockly.JavaScript.forBlock['move_forward']);
-            console.log('Blockly.JavaScript object:', Blockly.JavaScript);
-
-            // Generate code
-            const code = Blockly.JavaScript.workspaceToCode(workspace);
-            console.log('Generated code:', code);
-
-            if (code.trim()) {
-                executeCode(code);
-            } else {
-                console.warn('No code generated from blocks');
-            }
-        } catch (error) {
-            console.error('Error generating code:', error);
-            // Show error to user
-            alert('Error generating code: ' + error.message);
+    // Add change listener
+    workspace.addChangeListener(function(event) {
+        if (event.type === Blockly.Events.BLOCK_CREATE ||
+            event.type === Blockly.Events.BLOCK_DELETE ||
+            event.type === Blockly.Events.BLOCK_CHANGE) {
+            updateCode();
         }
     });
+}
 
-    isInitialized = true;
-    console.log('Application initialized successfully');
+// Update code when workspace changes
+function updateCode() {
+    try {
+        const code = Blockly.JavaScript.workspaceToCode(workspace);
+        console.log('Generated code:', code);
+    } catch (error) {
+        console.error('Error generating code:', error);
+    }
 }
 
 // API Communication
@@ -371,7 +394,7 @@ function turnDegrees(degrees) {
 // Scene control functions
 function setCameraPosition(x, y, z) {
     if (!window.camera) {
-        console.error('Three.js camera not initialized');
+        console.warn('Three.js camera not initialized yet');
         return;
     }
     window.camera.position.set(x, y, z);
@@ -380,7 +403,7 @@ function setCameraPosition(x, y, z) {
 
 function setCameraLookAt(x, y, z) {
     if (!window.camera) {
-        console.error('Three.js camera not initialized');
+        console.warn('Three.js camera not initialized yet');
         return;
     }
     window.camera.lookAt(x, y, z);
@@ -389,7 +412,7 @@ function setCameraLookAt(x, y, z) {
 
 function setLightColor(color) {
     if (!window.directionalLight) {
-        console.error('Three.js directional light not initialized');
+        console.warn('Three.js directional light not initialized yet');
         return;
     }
     window.directionalLight.color.set(color);
@@ -398,7 +421,7 @@ function setLightColor(color) {
 
 function setLightIntensity(intensity) {
     if (!window.directionalLight) {
-        console.error('Three.js directional light not initialized');
+        console.warn('Three.js directional light not initialized yet');
         return;
     }
     window.directionalLight.intensity = intensity;
@@ -407,7 +430,7 @@ function setLightIntensity(intensity) {
 
 function setGroundColor(color) {
     if (!window.ground) {
-        console.error('Three.js ground plane not initialized');
+        console.warn('Three.js ground plane not initialized yet');
         return;
     }
     window.ground.material.color.set(color);
@@ -416,7 +439,7 @@ function setGroundColor(color) {
 
 function setGroundSize(size) {
     if (!window.ground) {
-        console.error('Three.js ground plane not initialized');
+        console.warn('Three.js ground plane not initialized yet');
         return;
     }
     window.ground.scale.set(size, size, size);

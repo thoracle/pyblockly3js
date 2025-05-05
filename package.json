@@ -1,0 +1,48 @@
+{
+  "name": "pyblockly3js",
+  "version": "1.0.0",
+  "description": "A Python-based Blockly editor with Three.js visualization",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "jest",
+    "start": "node index.js"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(three|three-orbitcontrols)/)"
+    ],
+    "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "^three/examples/jsm/controls/OrbitControls$": "<rootDir>/tests/mocks.js"
+    },
+    "testMatch": [
+      "**/tests/**/*.js"
+    ],
+    "setupFiles": [
+      "<rootDir>/tests/setup.js"
+    ]
+  },
+  "keywords": [
+    "blockly",
+    "three.js",
+    "python",
+    "education"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "blockly": "^10.3.0",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.7",
+    "@babel/preset-env": "^7.23.7",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}

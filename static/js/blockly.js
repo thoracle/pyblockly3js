@@ -3,6 +3,18 @@ console.log('Loading Blockly block definitions...');
 
 // Define custom block types
 const customBlocks = {
+    // Color picker block
+    scene_color_picker: {
+        init: function() {
+            this.appendDummyInput()
+                .appendField("Set scene color")
+                .appendField(new Blockly.FieldColour("#ffffff"), "COLOR");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(230);
+            this.setTooltip("Set the scene background color");
+        }
+    },
     // Movement blocks
     move_forward: {
         init: function() {
@@ -134,6 +146,12 @@ const customBlocks = {
             this.setNextStatement(true, null);
             this.setColour(160);
             this.setTooltip("Set the color of the ground plane");
+            this.setInputsInline(true);
+            
+            // Add a default color picker block
+            const colorBlock = workspace.newBlock('scene_color_picker');
+            colorBlock.initSvg();
+            this.getInput('COLOR').connection.connect(colorBlock.outputConnection);
         }
     },
     set_ground_size: {
@@ -149,15 +167,12 @@ const customBlocks = {
     }
 };
 
-// Register custom blocks
-Object.entries(customBlocks).forEach(([type, definition]) => {
-    if (!Blockly.Blocks[type]) {
-        Blockly.Blocks[type] = definition;
-    }
-});
-
 // Define JavaScript generators
 const generators = {
+    scene_color_picker: function(block) {
+        const color = block.getFieldValue('COLOR');
+        return `scene.background = new THREE.Color('${color}');\n`;
+    },
     move_forward: function(block) {
         return 'moveForward();\n';
     },
@@ -241,17 +256,38 @@ const generators = {
     }
 };
 
-// Register JavaScript generators
-Object.entries(generators).forEach(([type, generator]) => {
-    if (!Blockly.JavaScript[type]) {
+// Initialize Blockly
+function initializeBlockly() {
+    // Register custom blocks
+    Object.entries(customBlocks).forEach(([type, definition]) => {
+        Blockly.Blocks[type] = definition;
+    });
+
+    // Initialize Blockly.JavaScript.forBlock if it doesn't exist
+    if (!Blockly.JavaScript.forBlock) {
+        Blockly.JavaScript.forBlock = {};
+    }
+
+    // Register JavaScript generators
+    Object.entries(generators).forEach(([type, generator]) => {
         Blockly.JavaScript[type] = generator;
         Blockly.JavaScript.forBlock[type] = generator;
-    }
-});
+    });
 
-// Verify block registration
-console.log('Registered custom blocks:', Object.keys(customBlocks));
-console.log('Registered generators:', Object.keys(Blockly.JavaScript).filter(key => key in generators));
-console.log('Registered generators in forBlock:', Object.keys(Blockly.JavaScript.forBlock).filter(key => key in generators));
+    // Verify block registration
+    console.log('Registered custom blocks:', Object.keys(Blockly.Blocks).filter(key => key.startsWith('scene_') || key.startsWith('move_') || key.startsWith('turn_') || key.startsWith('set_')));
+    console.log('Registered generators:', Object.keys(Blockly.JavaScript).filter(key => key.startsWith('scene_') || key.startsWith('move_') || key.startsWith('turn_') || key.startsWith('set_')));
+}
+
+// Wait for Blockly to be fully loaded
+if (typeof Blockly !== 'undefined') {
+    initializeBlockly();
+} else {
+    window.addEventListener('load', () => {
+        if (typeof Blockly !== 'undefined') {
+            initializeBlockly();
+        }
+    });
+}
 
 console.log('Blockly block definitions loaded successfully'); 

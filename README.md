@@ -10,19 +10,28 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-2. Install dependencies:
+2. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Run the application:
+3. Install Node.js dependencies:
+```bash
+npm install
+```
+
+4. Run the application:
 ```bash
 python app.py
 ```
 
-4. Run tests:
+5. Run tests:
 ```bash
+# Python tests
 pytest
+
+# JavaScript tests
+npm test
 ```
 
 ## Project Structure
@@ -31,13 +40,19 @@ pytest
 blockly3js/
 ├── app.py                 # Main Flask application
 ├── requirements.txt       # Python dependencies
-├── static/               # Static files
-│   └── js/              # JavaScript files
-│       └── app.js       # Frontend application logic
-├── templates/            # HTML templates
-│   └── index.html       # Main template
-└── tests/               # Test files
-    └── test_app.py      # Application tests
+├── package.json          # Node.js dependencies
+├── .babelrc             # Babel configuration for testing
+├── static/              # Static files
+│   ├── js/             # JavaScript files
+│   │   ├── app.js      # Frontend application logic
+│   │   ├── blockly.js  # Blockly configuration and blocks
+│   │   ├── three.js    # Three.js scene setup and rendering
+│   │   └── macbook-controls.js # MacBook-specific controls
+│   └── css/            # Stylesheets
+├── templates/           # HTML templates
+│   └── index.html      # Main template
+└── tests/              # Test files
+    └── test_app.py     # Application tests
 ```
 
 ## Features
@@ -46,14 +61,17 @@ blockly3js/
 - Real-time 3D visualization with Three.js
 - Physics-based movement system
 - Collision detection
-- Keyboard input handling
+- Keyboard and touch input handling
+- MacBook-specific controls and gestures
 - Customizable scene properties
 
 ## Development
 
-- Use `black` for code formatting
-- Use `flake8` for linting
+- Use `black` for Python code formatting
+- Use `flake8` for Python linting
+- Use `eslint` for JavaScript linting
 - Run tests before committing changes
+- Follow the design guidelines in `design.md`
 
 ## Toolbox Groups and Blocks
 
