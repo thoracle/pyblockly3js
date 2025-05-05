@@ -3,10 +3,10 @@
 <head>
     <title>3D Visual Programming</title>
     <!-- Load Blockly -->
-    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
-    <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
-    <script src="https://unpkg.com/blockly/javascript_compressed.js"></script>
-    <script src="https://unpkg.com/blockly/msg/en.js"></script>
+    <script src="https://unpkg.com/blockly@10.2.2/blockly_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@10.2.2/blocks_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@10.2.2/javascript_compressed.js"></script>
+    <script src="https://unpkg.com/blockly@10.2.2/msg/en.js"></script>
     
     <!-- Load Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -57,22 +57,41 @@
             left: 0;
         }
         
-        #runButton {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
+        .button-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
             z-index: 1000;
-            padding: 10px 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        #runButton {
             background-color: #4CAF50;
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
         }
         
         #runButton:hover {
             background-color: #45a049;
+        }
+        
+        #resetButton {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        #resetButton:hover {
+            background-color: #da190b;
         }
         
         /* Make Blockly blocks semi-transparent */
@@ -87,8 +106,12 @@
 </head>
 <body>
     <div id="threejsDiv"></div>
-    <div id="blocklyDiv"></div>
-    <button id="runButton">Update</button>
+    <div id="blocklyDiv">
+        <div class="button-container">
+            <button id="runButton" class="button">Update</button>
+            <button id="resetButton" class="button">Reset</button>
+        </div>
+    </div>
     
     <script>
         // Define toolbox
@@ -213,6 +236,16 @@
                     } catch (error) {
                         console.error('Error executing blocks:', error);
                         alert('Error executing blocks: ' + error.message);
+                    }
+                });
+
+                // Add Reset button click handler
+                document.getElementById('resetButton').addEventListener('click', () => {
+                    try {
+                        threeApp.resetScene();
+                    } catch (error) {
+                        console.error('Error resetting scene:', error);
+                        alert('Error resetting scene: ' + error.message);
                     }
                 });
             } catch (error) {
