@@ -94,6 +94,24 @@
             background-color: #da190b;
         }
         
+        #testButton {
+            position: absolute;
+            top: 50px;
+            right: 10px;
+            z-index: 2;
+            padding: 8px 16px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        #testButton:hover {
+            background-color: #1976D2;
+        }
+        
         /* Make Blockly blocks semi-transparent */
         .blocklyPath {
             opacity: 0.8;
@@ -110,6 +128,7 @@
         <div class="button-container">
             <button id="runButton" class="button">Update</button>
             <button id="resetButton" class="button">Reset</button>
+            <button id="testButton" class="button">Test Color</button>
         </div>
     </div>
     
@@ -191,7 +210,8 @@
                         maxScale: 3,
                         minScale: 0.3,
                         scaleSpeed: 1.2
-                    }
+                    },
+                    trashcan: true
                 });
                 console.log('Blockly initialized');
 
@@ -246,6 +266,36 @@
                     } catch (error) {
                         console.error('Error resetting scene:', error);
                         alert('Error resetting scene: ' + error.message);
+                    }
+                });
+
+                // Add test button handler
+                document.getElementById('testButton').addEventListener('click', function() {
+                    console.log('Test button clicked');
+                    if (threeApp && threeApp.ground) {
+                        // Create material exactly like in addBasicScene
+                        const groundMaterial = new THREE.MeshStandardMaterial({ 
+                            color: '#ff0000',  // Red color
+                            side: THREE.DoubleSide,
+                            roughness: 0.8,
+                            metalness: 0.2
+                        });
+                        
+                        // Dispose of the old material
+                        if (threeApp.ground.material) {
+                            threeApp.ground.material.dispose();
+                        }
+                        
+                        // Assign the new material
+                        threeApp.ground.material = groundMaterial;
+                        
+                        // Force a render
+                        if (threeApp.renderer && threeApp.scene && threeApp.camera) {
+                            threeApp.renderer.render(threeApp.scene, threeApp.camera);
+                        }
+                        
+                        console.log('Test material created and assigned:', threeApp.ground.material);
+                        console.log('Test material color:', threeApp.ground.material.color);
                     }
                 });
             } catch (error) {
