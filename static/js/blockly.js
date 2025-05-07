@@ -28,13 +28,16 @@ const customBlocks = {
     },
     set_ground_size: {
         init: function() {
-            this.appendValueInput("SIZE")
+            this.appendValueInput("X")
                 .setCheck("Number")
-                .appendField("Set ground size to");
+                .appendField("Set ground size X");
+            this.appendValueInput("Y")
+                .setCheck("Number")
+                .appendField("Y");
             this.setPreviousStatement(true, null);
             this.setNextStatement(true, null);
             this.setColour(160);
-            this.setTooltip("Set the size of the ground plane");
+            this.setTooltip("Set the size of the ground plane in X and Y dimensions");
         }
     },
     set_camera_position: {
@@ -141,6 +144,65 @@ const customBlocks = {
             this.setColour(160);
             this.setTooltip("Reset the scene to its default state");
         }
+    },
+    // Wait block
+    wait_seconds: {
+        init: function() {
+            this.appendValueInput("SECONDS")
+                .setCheck("Number")
+                .appendField("Wait");
+            this.appendDummyInput()
+                .appendField("seconds");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(280);
+            this.setTooltip("Wait for the specified number of seconds");
+        }
+    },
+    // Movement blocks
+    move_forward: {
+        init: function() {
+            this.appendValueInput("DISTANCE")
+                .setCheck("Number")
+                .appendField("Move forward");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(280);
+            this.setTooltip("Move the cube forward by the specified distance");
+        }
+    },
+    move_backward: {
+        init: function() {
+            this.appendValueInput("DISTANCE")
+                .setCheck("Number")
+                .appendField("Move backward");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(280);
+            this.setTooltip("Move the cube backward by the specified distance");
+        }
+    },
+    turn_left: {
+        init: function() {
+            this.appendValueInput("ANGLE")
+                .setCheck("Number")
+                .appendField("Turn left");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(280);
+            this.setTooltip("Turn the cube left by the specified angle (in degrees)");
+        }
+    },
+    turn_right: {
+        init: function() {
+            this.appendValueInput("ANGLE")
+                .setCheck("Number")
+                .appendField("Turn right");
+            this.setPreviousStatement(true, null);
+            this.setNextStatement(true, null);
+            this.setColour(280);
+            this.setTooltip("Turn the cube right by the specified angle (in degrees)");
+        }
     }
 };
 
@@ -148,52 +210,75 @@ const customBlocks = {
 const generators = {
     scene_color_picker: function(block) {
         const color = block.getFieldValue('COLOR');
-        return `scene.background = new THREE.Color('${color}');\n`;
+        return `setSceneBackgroundColor('${color}');\n`;
     },
     set_ground_color: function(block) {
         const color = block.getFieldValue('COLOR');
-        return `threeApp.setGroundColor('${color}');\n`;
+        return `setGroundColor('${color}');\n`;
     },
     set_ground_size: function(block) {
-        const size = Blockly.JavaScript.valueToCode(block, 'SIZE', Blockly.JavaScript.ORDER_ATOMIC);
-        return `threeApp.setGroundSize(${size});\n`;
+        const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_NONE) || '1';
+        const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_NONE) || '1';
+        return `setGroundSize(${x}, ${y});\n`;
     },
     set_camera_position: function(block) {
-        const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC);
-        const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC);
-        const z = Blockly.JavaScript.valueToCode(block, 'Z', Blockly.JavaScript.ORDER_ATOMIC);
-        return `threeApp.setCameraPosition(${x}, ${y}, ${z});\n`;
+        const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_NONE) || '0';
+        const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_NONE) || '0';
+        const z = Blockly.JavaScript.valueToCode(block, 'Z', Blockly.JavaScript.ORDER_NONE) || '0';
+        return `setCameraPosition(${x}, ${y}, ${z});\n`;
     },
     set_camera_look_at: function(block) {
         const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC);
         const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC);
         const z = Blockly.JavaScript.valueToCode(block, 'Z', Blockly.JavaScript.ORDER_ATOMIC);
-        return `threeApp.setCameraLookAt(${x}, ${y}, ${z});\n`;
+        return `setCameraLookAt(${x}, ${y}, ${z});\n`;
     },
     set_light_color: function(block) {
         const color = block.getFieldValue('COLOR');
-        return `threeApp.setDirectionalLightColor('${color}');\n`;
+        return `setDirectionalLightColor('${color}');\n`;
     },
     set_light_intensity: function(block) {
         const intensity = Blockly.JavaScript.valueToCode(block, 'INTENSITY', Blockly.JavaScript.ORDER_ATOMIC);
-        return `threeApp.setDirectionalLightIntensity(${intensity});\n`;
+        return `setDirectionalLightIntensity(${intensity});\n`;
     },
     set_light_position: function(block) {
         const x = Blockly.JavaScript.valueToCode(block, 'X', Blockly.JavaScript.ORDER_ATOMIC);
         const y = Blockly.JavaScript.valueToCode(block, 'Y', Blockly.JavaScript.ORDER_ATOMIC);
         const z = Blockly.JavaScript.valueToCode(block, 'Z', Blockly.JavaScript.ORDER_ATOMIC);
-        return `threeApp.setDirectionalLightPosition(${x}, ${y}, ${z});\n`;
+        return `setDirectionalLightPosition(${x}, ${y}, ${z});\n`;
     },
     set_ambient_light_color: function(block) {
         const color = block.getFieldValue('COLOR');
-        return `threeApp.setAmbientLightColor('${color}');\n`;
+        return `setAmbientLightColor('${color}');\n`;
     },
     set_ambient_light_intensity: function(block) {
         const intensity = Blockly.JavaScript.valueToCode(block, 'INTENSITY', Blockly.JavaScript.ORDER_ATOMIC);
-        return `threeApp.setAmbientLightIntensity(${intensity});\n`;
+        return `setAmbientLightIntensity(${intensity});\n`;
     },
     reset_scene: function(block) {
-        return `threeApp.resetScene();\n`;
+        return `resetScene();\n`;
+    },
+    // Wait generator
+    wait_seconds: function(block) {
+        const seconds = Blockly.JavaScript.valueToCode(block, 'SECONDS', Blockly.JavaScript.ORDER_NONE) || '1';
+        return `setTimeout(function() {}, ${seconds} * 1000);\n`;
+    },
+    // Movement generators
+    move_forward: function(block) {
+        const distance = Blockly.JavaScript.valueToCode(block, 'DISTANCE', Blockly.JavaScript.ORDER_NONE) || '1';
+        return `moveCubeForward(${distance});\n`;
+    },
+    move_backward: function(block) {
+        const distance = Blockly.JavaScript.valueToCode(block, 'DISTANCE', Blockly.JavaScript.ORDER_NONE) || '1';
+        return `moveCubeBackward(${distance});\n`;
+    },
+    turn_left: function(block) {
+        const angle = Blockly.JavaScript.valueToCode(block, 'ANGLE', Blockly.JavaScript.ORDER_NONE) || '90';
+        return `turnCubeLeft(${angle});\n`;
+    },
+    turn_right: function(block) {
+        const angle = Blockly.JavaScript.valueToCode(block, 'ANGLE', Blockly.JavaScript.ORDER_NONE) || '90';
+        return `turnCubeRight(${angle});\n`;
     }
 };
 

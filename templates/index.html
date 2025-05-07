@@ -128,7 +128,6 @@
         <div class="button-container">
             <button id="runButton" class="button">Update</button>
             <button id="resetButton" class="button">Reset</button>
-            <button id="testButton" class="button">Test Color</button>
         </div>
     </div>
     
@@ -140,14 +139,13 @@
                 {
                     kind: 'category',
                     name: 'Movement',
-                    colour: '#5C6BC0',
+                    colour: '#9C27B0',
                     contents: [
                         { kind: 'block', type: 'move_forward' },
                         { kind: 'block', type: 'move_backward' },
                         { kind: 'block', type: 'turn_left' },
                         { kind: 'block', type: 'turn_right' },
-                        { kind: 'block', type: 'move_distance' },
-                        { kind: 'block', type: 'turn_degrees' }
+                        { kind: 'block', type: 'wait_seconds' }
                     ]
                 },
                 {
@@ -167,10 +165,10 @@
                 {
                     kind: 'category',
                     name: 'Logic',
-                    colour: '#FFA726',
+                    colour: '#5C6BC0',
                     contents: [
                         { kind: 'block', type: 'controls_if' },
-                        { kind: 'block', type: 'controls_repeat_ext' },
+                        { kind: 'block', type: 'controls_repeat_ext', colour: '#5C6BC0', style: 'logic_blocks' },
                         { kind: 'block', type: 'logic_compare' },
                         { kind: 'block', type: 'logic_operation' },
                         { kind: 'block', type: 'logic_negate' },
@@ -213,6 +211,7 @@
                     },
                     trashcan: true
                 });
+
                 console.log('Blockly initialized');
 
                 // Add Run button click handler
@@ -266,36 +265,6 @@
                     } catch (error) {
                         console.error('Error resetting scene:', error);
                         alert('Error resetting scene: ' + error.message);
-                    }
-                });
-
-                // Add test button handler
-                document.getElementById('testButton').addEventListener('click', function() {
-                    console.log('Test button clicked');
-                    if (threeApp && threeApp.ground) {
-                        // Create material exactly like in addBasicScene
-                        const groundMaterial = new THREE.MeshStandardMaterial({ 
-                            color: '#ff0000',  // Red color
-                            side: THREE.DoubleSide,
-                            roughness: 0.8,
-                            metalness: 0.2
-                        });
-                        
-                        // Dispose of the old material
-                        if (threeApp.ground.material) {
-                            threeApp.ground.material.dispose();
-                        }
-                        
-                        // Assign the new material
-                        threeApp.ground.material = groundMaterial;
-                        
-                        // Force a render
-                        if (threeApp.renderer && threeApp.scene && threeApp.camera) {
-                            threeApp.renderer.render(threeApp.scene, threeApp.camera);
-                        }
-                        
-                        console.log('Test material created and assigned:', threeApp.ground.material);
-                        console.log('Test material color:', threeApp.ground.material.color);
                     }
                 });
             } catch (error) {

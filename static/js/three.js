@@ -377,30 +377,11 @@ class ThreeJSApp {
 
     // Scene operation functions
     setGroundColor(colorValue) {
-        console.log('=== setGroundColor Start ===');
-        console.log('Raw color value:', colorValue);
-        console.log('Color type:', typeof colorValue);
-        console.log('Color value as string:', String(colorValue));
-        console.log('ThreeJSApp instance:', this === instance ? 'Correct instance' : 'Different instance');
+        console.log('Setting ground color to:', colorValue);
         
         if (!this.ground) {
             console.error('Ground object does not exist');
             return;
-        }
-        
-        console.log('Ground object exists:', !!this.ground);
-        console.log('Ground object details:', {
-            uuid: this.ground.uuid,
-            type: this.ground.type,
-            visible: this.ground.visible,
-            material: this.ground.material
-        });
-        console.log('Current ground color:', this.ground.material.color);
-        
-        // Dispose of the old material
-        if (this.ground.material) {
-            console.log('Disposing old material:', this.ground.material);
-            this.ground.material.dispose();
         }
         
         // Create new material
@@ -411,56 +392,44 @@ class ThreeJSApp {
             metalness: 0.2
         });
         
-        // Explicitly set needsUpdate
-        newMaterial.needsUpdate = true;
-        
-        // Assign new material
+        // Apply new material
         this.ground.material = newMaterial;
+        this.ground.material.needsUpdate = true;
         
         // Force render
-        console.log('Forcing render...');
-        this.renderer.render(this.scene, this.camera);
-        console.log('Render info:', this.renderer.info);
-        
-        console.log('New material created and assigned:', newMaterial);
-        console.log('New material color:', newMaterial.color);
-        console.log('Material needsUpdate:', newMaterial.needsUpdate); // Should log true
-        console.log('Material properties:', {
-            color: newMaterial.color,
-            side: newMaterial.side,
-            roughness: newMaterial.roughness,
-            metalness: newMaterial.metalness
-        });
-        
-        // Verify ground is in scene
-        const groundInScene = this.scene.children.includes(this.ground);
-        console.log('Is ground in scene?', groundInScene);
-        if (!groundInScene) {
-            console.warn('Ground not in scene, re-adding...');
-            this.scene.add(this.ground);
+        if (this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
         }
-        
-        console.log('Scene children:', this.scene.children.map(child => ({
-            uuid: child.uuid,
-            type: child.type,
-            name: child.name,
-            visible: child.visible
-        })));
-        
-        // Verify animation loop is running
-        console.log('Animation frame ID:', this.animationFrameId);
-        if (!this.animationFrameId) {
-            console.warn('Animation loop not running, restarting...');
-            this.animate();
-        }
-        
-        console.log('=== setGroundColor End ===');
     }
 
-    setGroundSize(size) {
+    setGroundSize(x, y) {
         if (this.ground) {
-            this.ground.scale.set(size, 1, size);
-            console.log('Ground size set to:', size);
+            // Update ground scale
+            this.ground.scale.set(x, 1, y);
+            
+            // Update grid helper size
+            const gridSize = Math.max(x, y) * 20; // Scale grid size to match ground
+            const gridDivisions = Math.max(x, y) * 20; // Scale divisions proportionally
+            const newGridHelper = new THREE.GridHelper(gridSize, gridDivisions, 0x000000, 0x000000);
+            newGridHelper.position.y = 0.01;
+            
+            // Remove old grid helper
+            this.scene.children = this.scene.children.filter(child => !(child instanceof THREE.GridHelper));
+            
+            // Add new grid helper
+            this.scene.add(newGridHelper);
+            
+            // Force material update
+            if (this.ground.material) {
+                this.ground.material.needsUpdate = true;
+            }
+            
+            // Force render
+            if (this.renderer && this.scene && this.camera) {
+                this.renderer.render(this.scene, this.camera);
+            }
+            
+            console.log('Ground and grid size set to:', { x, y });
         }
     }
 
@@ -470,8 +439,27 @@ class ThreeJSApp {
     }
 
     setCameraLookAt(x, y, z) {
+        if (!this.camera) {
+            console.error('Camera not initialized');
+            return;
+        }
+
+        // Update camera target
         this.camera.lookAt(x, y, z);
-        console.log('Camera looking at:', x, y, z);
+        
+        // Update controls target if they exist
+        if (this.controls) {
+            this.controls.target.set(x, y, z);
+            this.controls.update();
+        }
+
+        console.log('Camera looking at:', {
+            x: x,
+            y: y,
+            z: z,
+            cameraPosition: this.camera.position,
+            controlsTarget: this.controls ? this.controls.target : 'No controls'
+        });
     }
 
     setDirectionalLightColor(color) {
@@ -507,6 +495,58 @@ class ThreeJSApp {
             this.ambientLight.intensity = intensity;
             console.log('Ambient light intensity set to:', intensity);
         }
+    }
+
+    setSceneBackgroundColor(color) {
+        if (this.scene) {
+            this.scene.background = new THREE.Color(color);
+            console.log('Scene background color set to:', color);
+        }
+    }
+
+    // Cube movement methods
+    moveCubeForward(distance) {
+        if (this.cube) {
+            // Get the cube's current rotation
+            const rotation = this.cube.rotation.y;
+            // Calculate new position based on rotation
+            this.cube.position.x += Math.sin(rotation) * distance;
+            this.cube.position.z += Math.cos(rotation) * distance;
+            console.log('Cube moved forward by:', distance);
+        }
+    }
+
+    moveCubeBackward(distance) {
+        if (this.cube) {
+            // Get the cube's current rotation
+            const rotation = this.cube.rotation.y;
+            // Calculate new position based on rotation
+            this.cube.position.x -= Math.sin(rotation) * distance;
+            this.cube.position.z -= Math.cos(rotation) * distance;
+            console.log('Cube moved backward by:', distance);
+        }
+    }
+
+    turnCubeLeft(angle) {
+        if (this.cube) {
+            // Convert angle to radians and add to current rotation
+            this.cube.rotation.y += THREE.MathUtils.degToRad(angle);
+            console.log('Cube turned left by:', angle, 'degrees');
+        }
+    }
+
+    turnCubeRight(angle) {
+        if (this.cube) {
+            // Convert angle to radians and subtract from current rotation
+            this.cube.rotation.y -= THREE.MathUtils.degToRad(angle);
+            console.log('Cube turned right by:', angle, 'degrees');
+        }
+    }
+
+    // Wait method
+    async wait(seconds) {
+        console.log('Waiting for', seconds, 'seconds');
+        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
     }
 
     updateDebugDisplay() {
@@ -597,20 +637,15 @@ let threeApp = null;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded - Initializing ThreeJSApp');
     if (!threeApp) {
         threeApp = new ThreeJSApp();
-        console.log('Created new ThreeJSApp instance:', threeApp);
         threeApp.init();
-    } else {
-        console.log('Using existing ThreeJSApp instance:', threeApp);
     }
 });
 
 // Global function to get the ThreeJSApp instance
 function getThreeJSApp() {
     if (!threeApp) {
-        console.warn('ThreeJSApp not initialized, creating new instance');
         threeApp = new ThreeJSApp();
         threeApp.init();
     }
@@ -619,17 +654,13 @@ function getThreeJSApp() {
 
 // Update global functions to use getThreeJSApp
 function setGroundColor(color) {
-    console.log('=== Global setGroundColor Start ===');
-    console.log('Global function called with color:', color);
     const app = getThreeJSApp();
-    console.log('Using ThreeJSApp instance:', app);
     app.setGroundColor(color);
-    console.log('=== Global setGroundColor End ===');
 }
 
-function setGroundSize(size) {
+function setGroundSize(x, y) {
     const app = getThreeJSApp();
-    app.setGroundSize(size);
+    app.setGroundSize(x, y);
 }
 
 function setCameraPosition(x, y, z) {
@@ -667,7 +698,33 @@ function setAmbientLightIntensity(intensity) {
     app.setAmbientLightIntensity(intensity);
 }
 
+function setSceneBackgroundColor(color) {
+    const app = getThreeJSApp();
+    app.setSceneBackgroundColor(color);
+}
+
 function resetScene() {
     const app = getThreeJSApp();
     app.resetScene();
+}
+
+// Global movement functions
+function moveCubeForward(distance) {
+    const app = getThreeJSApp();
+    app.moveCubeForward(distance);
+}
+
+function moveCubeBackward(distance) {
+    const app = getThreeJSApp();
+    app.moveCubeBackward(distance);
+}
+
+function turnCubeLeft(angle) {
+    const app = getThreeJSApp();
+    app.turnCubeLeft(angle);
+}
+
+function turnCubeRight(angle) {
+    const app = getThreeJSApp();
+    app.turnCubeRight(angle);
 } 
